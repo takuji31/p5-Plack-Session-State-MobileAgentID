@@ -10,7 +10,7 @@ our $VERSION = '0.01';
 
 sub new {
     my $class = shift;
-    bless {},$class;
+    bless {}, $class;
 }
 
 sub get_session_id {
@@ -27,10 +27,7 @@ sub get_session_id {
 
 }
 
-sub generate {
-    my $self = shift;
-    $self->get_session_id(@_);
-}
+sub generate { shift->get_session_id(@_) }
 
 1;
 __END__
