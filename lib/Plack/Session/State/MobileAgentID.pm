@@ -1,19 +1,44 @@
 package Plack::Session::State::MobileAgentID;
-
 use strict;
 use warnings;
+
+use parent qw/Plack::Session::State/;
+use HTTP::MobileAgent;
+use Carp();
+
 our $VERSION = '0.01';
+
+sub get_session_id {
+    my ( $self, $env ) = @_;
+
+    my $mobile_agent = HTTP::MobileAgent->new;
+    Carp::croak "Can't support this carrier"
+        unless $mobile_agent->is_docomo
+        || $mobile_agent->is_softbank
+        || $mobile_agent->is_ezweb;
+    my $id = $mobile_agent->user_id;
+
+    return $id;
+
+}
 
 1;
 __END__
 
 =head1 NAME
 
-Plack::Session::State::MobileAgentID -
+Plack::Session::State::MobileAgentID - Session state for Plack::Session by mobile user id.
 
 =head1 SYNOPSIS
 
-  use Plack::Session::State::MobileAgentID;
+use Plack::Builder;
+use Plack::Session::State::MobileAgentID;
+my $app = sub { #do something };
+
+builder {
+    enable 'Session', state => Plack::Session::State::MobileAgentID->new;
+    $app;
+}
 
 =head1 DESCRIPTION
 
