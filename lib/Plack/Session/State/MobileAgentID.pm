@@ -5,20 +5,53 @@ use warnings;
 use parent qw/Plack::Session::State/;
 use HTTP::MobileAgent;
 use Carp();
+use Plack::Request;
+use Net::CIDR::MobileJP;
+
+use Plack::Util::Accessor qw/
+    check_ip
+    cidr
+    mobile_agent
+    /;
 
 our $VERSION = '0.01';
 
 sub new {
-    my $class = shift;
-    bless {}, $class;
+    my $class  = shift;
+    my $params = \%_;
+    $params->{cidr}         ||= Net::CIDR::MobileJP->new;
+    $params->{mobile_agent} ||= HTTP::MobileAgent->new;
+    bless $params, $class;
 }
 
-sub validate_session_id { 1 }
+sub create_request {
+    Plack::Request->new(@_);
+}
+
+sub validate_session_id {
+    my ( $self, $id, $env ) = @_;
+    return 1 unless $self->check_ip;
+
+    my $req          = create_request($env);
+    my $cidr         = $self->cidr;
+    my $mobile_agent = $self->mobile_agent;
+    return $cidr->get_carrier( $req->address ) && $mobile_agent->carrier;
+}
+
+sub extract {
+    my ( $self, $env ) = @_;
+    my $id = $self->get_session_id($env);
+
+    return unless defined $id;
+
+    return $id if $self->validate_session_id( $id, $env );
+    return;
+}
 
 sub get_session_id {
     my ( $self, $env ) = @_;
 
-    my $mobile_agent = HTTP::MobileAgent->new;
+    my $mobile_agent = $self->mobile_agent;
     Carp::croak "Can't support this carrier"
         unless $mobile_agent->is_docomo
         || $mobile_agent->is_softbank
