@@ -8,6 +8,11 @@ use Carp();
 
 our $VERSION = '0.01';
 
+sub new {
+    my $class = shift;
+    bless {},$class;
+}
+
 sub get_session_id {
     my ( $self, $env ) = @_;
 
@@ -20,6 +25,11 @@ sub get_session_id {
 
     return $id;
 
+}
+
+sub generate {
+    my $self = shift;
+    $self->get_session_id(@_);
 }
 
 1;
