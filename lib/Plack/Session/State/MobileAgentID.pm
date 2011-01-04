@@ -13,6 +13,8 @@ sub new {
     bless {}, $class;
 }
 
+sub validate_session_id { 1 }
+
 sub get_session_id {
     my ( $self, $env ) = @_;
 
